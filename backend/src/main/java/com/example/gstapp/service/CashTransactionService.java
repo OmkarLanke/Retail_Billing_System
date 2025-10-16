@@ -2,6 +2,7 @@ package com.example.gstapp.service;
 
 import com.example.gstapp.dto.CashAdjustmentRequest;
 import com.example.gstapp.model.CashTransaction;
+import com.example.gstapp.model.User;
 import com.example.gstapp.repository.CashTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,8 +59,14 @@ public class CashTransactionService {
             }
         }
         
+        // Handle empty description
+        String description = request.getDescription();
+        if (description == null || description.trim().isEmpty()) {
+            description = "Cash adjustment - " + transactionType.name();
+        }
+        
         return createCashTransaction(merchantId, transactionType, 
-                                   request.getAmount(), request.getDescription(), request.getReferenceNumber(), transactionDate);
+                                   request.getAmount(), description, request.getReferenceNumber(), transactionDate);
     }
     
     public BigDecimal getTotalCashIn(Long merchantId) {
@@ -80,5 +87,17 @@ public class CashTransactionService {
         BigDecimal totalAdjustments = getTotalAdjustments(merchantId);
         
         return totalIn.add(totalAdjustments).subtract(totalOut);
+    }
+    
+    // Sale-related methods
+    public void recordSalePayment(BigDecimal amount, String description, User user) {
+        createCashTransaction(user.getId(), CashTransaction.TransactionType.IN, 
+            amount, description, null);
+    }
+    
+    public void reverseSalePayment(BigDecimal amount, User user) {
+        // Create a reverse transaction (OUT) to cancel the previous IN transaction
+        createCashTransaction(user.getId(), CashTransaction.TransactionType.OUT, 
+            amount, "Reversed sale payment", null);
     }
 }

@@ -1,11 +1,79 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 export default function Sidebar({ user, onLogout }) {
   const router = useRouter()
   const pathname = usePathname()
+  const [isPurchaseExpanded, setIsPurchaseExpanded] = useState(() => {
+    // Try to get from localStorage, default to true
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('purchaseDropdownExpanded')
+      return saved !== null ? saved === 'true' : true
+    }
+    return true
+  })
+
+  const [isSaleExpanded, setIsSaleExpanded] = useState(() => {
+    // Try to get from localStorage, default to false
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('saleDropdownExpanded')
+      return saved !== null ? saved === 'true' : false
+    }
+    return false
+  })
+
+  const [isCashBankExpanded, setIsCashBankExpanded] = useState(() => {
+    // Try to get from localStorage, default to false
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('cashBankDropdownExpanded')
+      return saved !== null ? saved === 'true' : false
+    }
+    return false
+  })
+
+  // Auto-expand purchase dropdown only when on purchase-related pages (not home page)
+  useEffect(() => {
+    const purchasePaths = [
+      '/dashboard/purchase-bills',
+      '/dashboard/payment-out', 
+      '/dashboard/expenses',
+      '/dashboard/purchase-order',
+      '/dashboard/purchase-return'
+    ]
+    
+    const salePaths = [
+      '/dashboard/sale-invoices',
+      '/dashboard/payment-in'
+    ]
+    
+    const cashBankPaths = [
+      '/dashboard/cash-bank/bank-accounts',
+      '/dashboard/cash-bank/cash-in-hand',
+      '/dashboard/cheques',
+      '/dashboard/loan-accounts'
+    ]
+    
+    // Only auto-expand if on actual purchase-related pages (not home page)
+    if (purchasePaths.some(path => pathname === path || pathname.startsWith(path))) {
+      setIsPurchaseExpanded(true)
+      localStorage.setItem('purchaseDropdownExpanded', 'true')
+    }
+    
+    // Auto-expand sale dropdown when on sale-related pages
+    if (salePaths.some(path => pathname === path || pathname.startsWith(path))) {
+      setIsSaleExpanded(true)
+      localStorage.setItem('saleDropdownExpanded', 'true')
+    }
+    
+    // Auto-expand cash & bank dropdown when on cash/bank-related pages
+    if (cashBankPaths.some(path => pathname === path || pathname.startsWith(path))) {
+      setIsCashBankExpanded(true)
+      localStorage.setItem('cashBankDropdownExpanded', 'true')
+    }
+  }, [pathname])
 
   const handleNavigation = (path, event) => {
     if (event) {
@@ -35,6 +103,24 @@ export default function Sidebar({ user, onLogout }) {
     if (path === '/dashboard/cash-bank/cash-in-hand') {
       return pathname === '/dashboard/cash-bank/cash-in-hand'
     }
+    if (path === '/dashboard/purchase-bills') {
+      return pathname === '/dashboard/purchase-bills'
+    }
+    if (path === '/dashboard/payment-out') {
+      return pathname === '/dashboard/payment-out'
+    }
+    if (path === '/dashboard/expenses') {
+      return pathname === '/dashboard/expenses'
+    }
+    if (path === '/dashboard/purchase-order') {
+      return pathname === '/dashboard/purchase-order'
+    }
+    if (path === '/dashboard/purchase-return') {
+      return pathname === '/dashboard/purchase-return'
+    }
+    if (path === '/dashboard/my-company') {
+      return pathname === '/dashboard/my-company'
+    }
     return pathname === path
   }
 
@@ -42,7 +128,7 @@ export default function Sidebar({ user, onLogout }) {
     <div className="w-64 bg-slate-800 text-white flex flex-col">
       {/* Top Section */}
       <div className="p-4 border-b border-slate-700">
-        <h1 className="text-xl font-bold text-white">GST App</h1>
+        <h1 className="text-xl font-bold text-white">TTI Retail Billing</h1>
       </div>
 
       {/* Search */}
@@ -90,19 +176,101 @@ export default function Sidebar({ user, onLogout }) {
 
         <div 
           className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
-          onClick={(e) => handleNavigation('/dashboard/sale', e)}
+          onClick={() => {
+            const newState = !isSaleExpanded
+            setIsSaleExpanded(newState)
+            localStorage.setItem('saleDropdownExpanded', newState.toString())
+          }}
         >
           <span className="text-lg">🧾</span>
           <span className="text-sm">Sale</span>
+          <svg className={`w-4 h-4 transition-transform ${isSaleExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
+
+        {isSaleExpanded && (
+          <div className="ml-6 space-y-1">
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer relative ${isActive('/dashboard/sale-invoices') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/sale-invoices', e)}
+            >
+              {isActive('/dashboard/sale-invoices') && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-r"></div>
+              )}
+              <span className="text-sm">Sale Invoices</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer relative ${isActive('/dashboard/payment-in') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/payment-in', e)}
+            >
+              {isActive('/dashboard/payment-in') && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-r"></div>
+              )}
+              <span className="text-sm">Payment In</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+          </div>
+        )}
 
         <div 
           className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
-          onClick={(e) => handleNavigation('/dashboard/purchase', e)}
+          onClick={() => {
+            const newState = !isPurchaseExpanded
+            setIsPurchaseExpanded(newState)
+            localStorage.setItem('purchaseDropdownExpanded', newState.toString())
+          }}
         >
           <span className="text-lg">🛒</span>
           <span className="text-sm">Purchase & Expense</span>
+          <svg className={`w-4 h-4 transition-transform ${isPurchaseExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
+
+        {isPurchaseExpanded && (
+          <div className="ml-6 space-y-1">
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer relative ${isActive('/dashboard/purchase-bills') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/purchase-bills', e)}
+            >
+              {isActive('/dashboard/purchase-bills') && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-r"></div>
+              )}
+              <span className="text-sm">Purchase Bills</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/payment-out') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/payment-out', e)}
+            >
+              <span className="text-sm">Payment-Out</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/expenses') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/expenses', e)}
+            >
+              <span className="text-sm">Expenses</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/purchase-order') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/purchase-order', e)}
+            >
+              <span className="text-sm">Purchase Order</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/purchase-return') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/purchase-return', e)}
+            >
+              <span className="text-sm">Purchase Return/ Dr. Note</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+          </div>
+        )}
 
         <div 
           className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
@@ -113,45 +281,51 @@ export default function Sidebar({ user, onLogout }) {
         </div>
 
         <div 
-          className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/cash-bank/bank-accounts') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
-          onClick={(e) => handleNavigation('/dashboard/cash-bank/bank-accounts', e)}
+          className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
+          onClick={() => {
+            const newState = !isCashBankExpanded
+            setIsCashBankExpanded(newState)
+            localStorage.setItem('cashBankDropdownExpanded', newState.toString())
+          }}
         >
           <span className="text-lg">🏦</span>
           <span className="text-sm">Cash & Bank</span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-4 h-4 transition-transform ${isCashBankExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
 
-        <div className="ml-6 space-y-1">
-          <div 
-            className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/cash-bank/bank-accounts') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
-            onClick={(e) => handleNavigation('/dashboard/cash-bank/bank-accounts', e)}
-          >
-            <span className="text-sm">Bank Accounts</span>
-            <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+        {isCashBankExpanded && (
+          <div className="ml-6 space-y-1">
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/cash-bank/bank-accounts') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/cash-bank/bank-accounts', e)}
+            >
+              <span className="text-sm">Bank Accounts</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+            <div 
+              className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/cash-bank/cash-in-hand') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+              onClick={(e) => handleNavigation('/dashboard/cash-bank/cash-in-hand', e)}
+            >
+              <span className="text-sm">Cash In Hand</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
+            <div 
+              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
+              onClick={(e) => handleNavigation('/dashboard/cheques', e)}
+            >
+              <span className="text-sm">Cheques</span>
+            </div>
+            <div 
+              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
+              onClick={(e) => handleNavigation('/dashboard/loan-accounts', e)}
+            >
+              <span className="text-sm">Loan Accounts</span>
+              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
+            </div>
           </div>
-          <div 
-            className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/cash-bank/cash-in-hand') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
-            onClick={(e) => handleNavigation('/dashboard/cash-bank/cash-in-hand', e)}
-          >
-            <span className="text-sm">Cash In Hand</span>
-            <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
-          </div>
-          <div 
-            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
-            onClick={(e) => handleNavigation('/dashboard/cheques', e)}
-          >
-            <span className="text-sm">Cheques</span>
-          </div>
-          <div 
-            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
-            onClick={(e) => handleNavigation('/dashboard/loan-accounts', e)}
-          >
-            <span className="text-sm">Loan Accounts</span>
-            <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
-          </div>
-        </div>
+        )}
 
         <div 
           className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
@@ -207,15 +381,15 @@ export default function Sidebar({ user, onLogout }) {
           className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center"
           onClick={(e) => handleNavigation('/dashboard/premium', e)}
         >
-          Get GST App Premium →
+          Get TTI Retail Billing Premium →
         </button>
 
         <div 
-          className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
-          onClick={(e) => handleNavigation('/dashboard/mobile', e)}
+          className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${isActive('/dashboard/my-company') ? 'bg-slate-700' : 'hover:bg-slate-700'}`}
+          onClick={(e) => handleNavigation('/dashboard/my-company', e)}
         >
-          <span className="text-lg">📱</span>
-          <span className="text-sm">Mobile</span>
+          <span className="text-lg">🏢</span>
+          <span className="text-sm">My Company</span>
           <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
         </div>
       </div>

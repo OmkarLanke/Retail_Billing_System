@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/cash-transactions")
+@RequestMapping("/api/cash-transactions")
 @CrossOrigin(origins = "*")
 public class CashTransactionController {
     
@@ -28,7 +28,15 @@ public class CashTransactionController {
     @GetMapping
     public ResponseEntity<?> getCashTransactions(Authentication authentication) {
         try {
+            System.out.println("=== Get Cash Transactions Debug ===");
+            System.out.println("Authentication: " + authentication);
+            System.out.println("Authentication Principal: " + authentication.getPrincipal());
+            System.out.println("Authentication Name: " + authentication.getName());
+            System.out.println("Authentication is authenticated: " + authentication.isAuthenticated());
+            
             Long merchantId = getMerchantIdFromAuth(authentication);
+            System.out.println("Extracted merchant ID: " + merchantId);
+            
             List<CashTransaction> transactions = cashTransactionService.getCashTransactionsByMerchantId(merchantId);
             BigDecimal currentBalance = cashTransactionService.getCurrentCashBalance(merchantId);
             
@@ -38,6 +46,8 @@ public class CashTransactionController {
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.err.println("Get cash transactions error: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -68,6 +78,7 @@ public class CashTransactionController {
                                       Authentication authentication) {
         try {
             Long merchantId = getMerchantIdFromAuth(authentication);
+            
             CashTransaction transaction = cashTransactionService.adjustCash(merchantId, request);
             BigDecimal newBalance = cashTransactionService.getCurrentCashBalance(merchantId);
             
@@ -137,6 +148,38 @@ public class CashTransactionController {
                 merchantId, startDate, endDate);
             return ResponseEntity.ok(Map.of("transactions", transactions));
         } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @GetMapping("/debug")
+    public ResponseEntity<?> debugAuth(Authentication authentication) {
+        try {
+            System.out.println("=== Debug Auth Endpoint ===");
+            System.out.println("Authentication: " + authentication);
+            System.out.println("Authentication Principal: " + authentication.getPrincipal());
+            System.out.println("Authentication Name: " + authentication.getName());
+            System.out.println("Authentication Authorities: " + authentication.getAuthorities());
+            System.out.println("Authentication is authenticated: " + authentication.isAuthenticated());
+            
+            if (authentication.getPrincipal() instanceof User) {
+                User user = (User) authentication.getPrincipal();
+                System.out.println("User ID: " + user.getId());
+                System.out.println("User Username: " + user.getUsername());
+                System.out.println("User Email: " + user.getEmail());
+                System.out.println("User Role: " + user.getRole());
+            }
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("authenticated", authentication.isAuthenticated());
+            response.put("principal", authentication.getPrincipal().getClass().getSimpleName());
+            response.put("name", authentication.getName());
+            response.put("authorities", authentication.getAuthorities().toString());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("Debug auth error: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

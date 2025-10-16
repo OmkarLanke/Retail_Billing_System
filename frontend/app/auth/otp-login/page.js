@@ -82,7 +82,7 @@ export default function OtpLoginPage() {
             </p>
           </div>
           
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit(sendOtp)}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit(sendOtp)} suppressHydrationWarning>
             <div>
               <label htmlFor="phone" className="form-label">
                 Phone Number
@@ -98,6 +98,7 @@ export default function OtpLoginPage() {
                 type="tel"
                 className="input-field"
                 placeholder="9876543210"
+                suppressHydrationWarning
               />
               {errors.phone && (
                 <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
@@ -137,7 +138,7 @@ export default function OtpLoginPage() {
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(verifyOtp)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(verifyOtp)} suppressHydrationWarning>
           <div>
             <label htmlFor="otp" className="form-label">
               OTP
@@ -154,6 +155,7 @@ export default function OtpLoginPage() {
               maxLength="6"
               className="input-field text-center text-2xl tracking-widest"
               placeholder="123456"
+              suppressHydrationWarning
             />
             {errors.otp && (
               <p className="mt-1 text-sm text-red-600">{errors.otp.message}</p>

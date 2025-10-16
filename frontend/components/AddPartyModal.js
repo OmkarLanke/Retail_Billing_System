@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { partiesApi } from '../lib/partiesApi'
+import toast from 'react-hot-toast'
 
 export default function AddPartyModal({ onClose, onSubmit }) {
   const [activeTab, setActiveTab] = useState('gst-address')
@@ -24,7 +26,7 @@ export default function AddPartyModal({ onClose, onSubmit }) {
     creditPeriod: '',
     openingBalance: '',
     asOfDate: new Date().toLocaleDateString('en-GB'), // DD/MM/YYYY format
-    balanceType: 'debit', // debit or credit
+    balanceType: 'to-pay', // 'to-pay' or 'to-receive'
     
     // Additional Fields Tab
     contactPerson: '',
@@ -33,9 +35,39 @@ export default function AddPartyModal({ onClose, onSubmit }) {
     notes: ''
   })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    onSubmit(formData)
+    
+    try {
+      // Map form data to API format
+      const partyData = {
+        name: formData.partyName,
+        phone: formData.phoneNumber || null,
+        email: formData.emailId || null,
+        address: formData.billingAddress || null,
+        gstNumber: formData.gstin || null,
+        panNumber: null, // Not collected in current form
+        openingBalance: parseFloat(formData.openingBalance) || 0,
+        partyType: 'CUSTOMER', // Default to CUSTOMER, can be made configurable
+        balanceType: formData.balanceType === 'to-pay' ? 'TO_PAY' : 'TO_RECEIVE'
+      }
+      
+      const response = await partiesApi.createParty(partyData)
+      toast.success('Party created successfully!')
+      onSubmit(response.data)
+    } catch (error) {
+      console.error('Error creating party:', error)
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message)
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors
+        const validationErrors = error.response.data.errors
+        const errorMessages = validationErrors.map(err => err.defaultMessage).join(', ')
+        toast.error(`Validation failed: ${errorMessages}`)
+      } else {
+        toast.error('Failed to create party')
+      }
+    }
   }
 
   const handleInputChange = (field, value) => {
@@ -309,6 +341,35 @@ export default function AddPartyModal({ onClose, onSubmit }) {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="DD/MM/YYYY"
                   />
+                </div>
+                
+                {/* To Pay / To Receive Radio Buttons */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-6">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="balanceType"
+                        value="to-pay"
+                        checked={formData.balanceType === 'to-pay'}
+                        onChange={(e) => handleInputChange('balanceType', e.target.value)}
+                        className="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">To Pay</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="balanceType"
+                        value="to-receive"
+                        checked={formData.balanceType === 'to-receive'}
+                        onChange={(e) => handleInputChange('balanceType', e.target.value)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">To Receive</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 

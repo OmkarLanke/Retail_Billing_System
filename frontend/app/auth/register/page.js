@@ -102,7 +102,7 @@ export default function RegisterPage() {
             </p>
           </div>
           
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit(sendOtp)}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit(sendOtp)} suppressHydrationWarning>
             <div>
               <label htmlFor="phone" className="form-label">
                 Phone Number
@@ -118,6 +118,7 @@ export default function RegisterPage() {
                 type="tel"
                 className="input-field"
                 placeholder="9876543210"
+                suppressHydrationWarning
               />
               {errors.phone && (
                 <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
@@ -164,7 +165,7 @@ export default function RegisterPage() {
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} suppressHydrationWarning>
           <div className="space-y-4">
             {/* Registration Type Toggle */}
             {!otpSent && (
@@ -210,6 +211,7 @@ export default function RegisterPage() {
                 type="text"
                 className="input-field"
                 placeholder="Enter username"
+                suppressHydrationWarning
               />
               {errors.username && (
                 <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
@@ -233,6 +235,7 @@ export default function RegisterPage() {
                   type="email"
                   className="input-field"
                   placeholder="Enter email"
+                  suppressHydrationWarning
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -251,6 +254,7 @@ export default function RegisterPage() {
                   value={phone}
                   disabled
                   className="input-field bg-gray-100"
+                  suppressHydrationWarning
                 />
                 <p className="mt-1 text-sm text-green-600">✓ OTP verified</p>
               </div>
@@ -272,6 +276,7 @@ export default function RegisterPage() {
                 type="password"
                 className="input-field"
                 placeholder="Enter password"
+                suppressHydrationWarning
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
@@ -288,6 +293,7 @@ export default function RegisterPage() {
                 type="text"
                 className="input-field"
                 placeholder="Enter your business name"
+                suppressHydrationWarning
               />
               {errors.businessName && (
                 <p className="mt-1 text-sm text-red-600">{errors.businessName.message}</p>

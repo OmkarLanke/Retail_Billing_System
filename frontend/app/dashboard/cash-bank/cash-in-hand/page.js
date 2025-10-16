@@ -6,6 +6,7 @@ import { authService } from '../../../../lib/auth'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import Sidebar from '../../../../components/Sidebar'
+import Header from '../../../../components/Header'
 import api from '../../../../lib/api'
 
 export default function CashInHandPage() {
@@ -27,7 +28,9 @@ export default function CashInHandPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (!authService.isAuthenticated()) {
+      if (!authService.isValidAuthenticated()) {
+        toast.error('Session expired. Please login again.')
+        authService.logout()
         router.push('/auth/login')
         return
       }
@@ -67,6 +70,17 @@ export default function CashInHandPage() {
     try {
       setLoading(true)
       
+      // Check if user is authenticated and token is not expired
+      if (!authService.isValidAuthenticated()) {
+        console.log('Token validation failed - redirecting to login')
+        toast.error('Session expired. Please login again.')
+        authService.logout()
+        router.push('/auth/login')
+        return
+      }
+      
+      console.log('Token validation passed - proceeding with request')
+      
       // Convert amount to number and ensure proper format
       const requestData = {
         amount: parseFloat(formData.amount),
@@ -77,6 +91,7 @@ export default function CashInHandPage() {
       }
       
       console.log('Submitting cash adjustment:', requestData)
+      
       const response = await api.post('/cash-transactions/adjust', requestData)
       console.log('Cash adjustment response:', response.data)
       toast.success('Cash adjusted successfully')
@@ -89,16 +104,19 @@ export default function CashInHandPage() {
         adjustmentDate: new Date().toISOString().split('T')[0]
       })
       await fetchCashTransactions()
-    } catch (error) {
-      console.error('Error adjusting cash:', error)
-      if (error.response?.status === 401) {
-        toast.error('Session expired. Please login again.')
-        authService.logout()
-        router.push('/auth/login')
-      } else {
-        toast.error(error.response?.data?.error || 'Failed to adjust cash')
-      }
-    } finally {
+      } catch (error) {
+        console.error('Error adjusting cash:', error)
+        console.error('Error response status:', error.response?.status)
+        console.error('Error response data:', error.response?.data)
+        if (error.response?.status === 401) {
+          console.log('401 Unauthorized - forcing logout and redirect')
+          toast.error('Session expired. Please login again.')
+          authService.forceLogout()
+          router.push('/auth/login')
+        } else {
+          toast.error(error.response?.data?.error || 'Failed to adjust cash')
+        }
+      } finally {
       setLoading(false)
     }
   }
@@ -130,34 +148,16 @@ export default function CashInHandPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Left Sidebar */}
-      <Sidebar user={user} onLogout={handleLogout} />
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <Header />
+      
+      <div className="flex">
+        {/* Left Sidebar */}
+        <Sidebar user={user} onLogout={handleLogout} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Company</span>
-              <span className="text-sm text-gray-500">Help</span>
-              <span className="text-sm text-gray-500">Shortcuts</span>
-              <button className="p-1 hover:bg-gray-100 rounded">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">
-                Customer Support: <span className="font-medium text-blue-600">(+91) 9333 911 911</span>
-              </div>
-              <a href="#" className="text-sm text-blue-600 hover:underline">Get Instant Online Support</a>
-            </div>
-          </div>
-        </div>
 
         {/* Main Content Area */}
         <div className="flex-1 p-6">
@@ -179,12 +179,6 @@ export default function CashInHandPage() {
                 </div>
               </div>
             </div>
-            <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
-              + Add Sale
-            </button>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
-              + Add Purchase
-            </button>
             <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -220,7 +214,7 @@ export default function CashInHandPage() {
           {/* Cash Balance */}
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Cash In Hand</h2>
-            <div className="text-3xl font-bold text-green-600">₹ {currentBalance?.toLocaleString() || '0'}</div>
+            <div className={`text-3xl font-bold ${currentBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>₹ {currentBalance?.toLocaleString() || '0'}</div>
           </div>
 
           {/* Transactions Table */}
@@ -288,9 +282,25 @@ export default function CashInHandPage() {
                         onClick={() => setSelectedTransaction(transaction)}
                       >
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {transaction.transactionType === 'IN' ? 'Cash Increase' : 
-                           transaction.transactionType === 'OUT' ? 'Cash Decrease' : 
-                           transaction.transactionType === 'ADJUSTMENT' ? 'Adjustment' : transaction.transactionType}
+                          {(() => {
+                            if (transaction.transactionType === 'IN') {
+                              return 'Cash Increase';
+                            } else if (transaction.transactionType === 'ADJUSTMENT') {
+                              return 'Adjustment';
+                            } else if (transaction.transactionType === 'OUT') {
+                              // Check description to determine if it's a purchase or payment out
+                              const description = transaction.description || '';
+                              if (description.startsWith('Purchase from ')) {
+                                return 'Purchase';
+                              } else if (description.startsWith('Payment to ')) {
+                                return 'Payment Out';
+                              } else {
+                                return 'Cash Decrease';
+                              }
+                            } else {
+                              return transaction.transactionType;
+                            }
+                          })()}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                           {transaction.description || 'N/A'}
@@ -327,6 +337,7 @@ export default function CashInHandPage() {
           currentBalance={currentBalance}
         />
       )}
+      </div>
     </div>
   )
 }
@@ -410,7 +421,7 @@ function AdjustCashModal({ onClose, onSubmit, loading, currentBalance }) {
           {/* Updated Cash Display */}
           <div className="bg-gray-50 p-3 rounded-lg">
             <span className="text-sm text-gray-600">Updated Cash: </span>
-            <span className="text-sm font-medium text-gray-900">₹ {currentBalance?.toLocaleString() || '0'}</span>
+            <span className={`text-sm font-medium ${currentBalance < 0 ? 'text-red-600' : 'text-gray-900'}`}>₹ {currentBalance?.toLocaleString() || '0'}</span>
           </div>
 
           {/* Adjustment Date */}

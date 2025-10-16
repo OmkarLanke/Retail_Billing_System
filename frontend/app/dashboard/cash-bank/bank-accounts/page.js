@@ -6,6 +6,7 @@ import { authService } from '../../../../lib/auth'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import Sidebar from '../../../../components/Sidebar'
+import Header from '../../../../components/Header'
 import api from '../../../../lib/api'
 
 export default function BankAccountsPage() {
@@ -141,9 +142,13 @@ export default function BankAccountsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Left Sidebar */}
-      <Sidebar user={user} onLogout={handleLogout} />
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <Header />
+      
+      <div className="flex">
+        {/* Left Sidebar */}
+        <Sidebar user={user} onLogout={handleLogout} />
 
       {/* Main Content */}
       <div className="flex-1 flex">
@@ -288,12 +293,33 @@ export default function BankAccountsPage() {
                               {transaction.transactionType}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {transaction.description || 'N/A'}
+                              {(() => {
+                                const desc = transaction.description || 'N/A';
+                                // Check if it's a payment transaction and extract party name
+                                if (desc.startsWith('Payment to ')) {
+                                  const partyNameMatch = desc.match(/Payment to ([^-]+)(?:\s-\s(.+))?/);
+                                  if (partyNameMatch) {
+                                    const partyName = partyNameMatch[1].trim();
+                                    const additionalDesc = partyNameMatch[2];
+                                    return (
+                                      <div>
+                                        <div className="font-medium text-gray-900">{partyName}</div>
+                                        {additionalDesc && (
+                                          <div className="text-xs text-gray-500">{additionalDesc}</div>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+                                }
+                                return desc;
+                              })()}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                               {new Date(transaction.transactionDate).toLocaleDateString()}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                            <td className={`px-4 py-4 whitespace-nowrap text-sm font-medium ${
+                              transaction.transactionType === 'WITHDRAWAL' ? 'text-red-600' : 'text-green-600'
+                            }`}>
                               ₹ {transaction.amount?.toLocaleString() || '0'}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -327,6 +353,7 @@ export default function BankAccountsPage() {
           loading={loading}
         />
       )}
+      </div>
     </div>
   )
 }

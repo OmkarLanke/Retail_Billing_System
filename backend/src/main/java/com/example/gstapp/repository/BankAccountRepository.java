@@ -1,6 +1,7 @@
 package com.example.gstapp.repository;
 
 import com.example.gstapp.model.BankAccount;
+import com.example.gstapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +22,12 @@ public interface BankAccountRepository extends JpaRepository<BankAccount, Long> 
     Optional<BigDecimal> getTotalBankBalanceByMerchantId(@Param("merchantId") Long merchantId);
     
     boolean existsByMerchantIdAndAccountNumberAndIsActiveTrue(Long merchantId, String accountNumber);
+    
+    Optional<BankAccount> findByMerchantIdAndAccountDisplayName(Long merchantId, String accountDisplayName);
+    
+    Optional<BankAccount> findByMerchantIdAndBankName(Long merchantId, String bankName);
+    
+    default Optional<BankAccount> findByIdAndUser(Long id, User user) {
+        return findByIdAndMerchantId(id, user.getId());
+    }
 }

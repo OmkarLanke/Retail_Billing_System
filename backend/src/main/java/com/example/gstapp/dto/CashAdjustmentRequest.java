@@ -11,7 +11,6 @@ public class CashAdjustmentRequest {
     @Positive(message = "Amount must be positive")
     private BigDecimal amount;
     
-    @NotBlank(message = "Description is required")
     private String description;
     
     private String referenceNumber;

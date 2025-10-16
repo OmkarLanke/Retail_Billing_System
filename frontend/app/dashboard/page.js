@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { authService } from '../../lib/auth'
 import toast from 'react-hot-toast'
-import Link from 'next/link'
+import Header from '../../components/Header'
+import Sidebar from '../../components/Sidebar'
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -56,87 +56,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Left Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-slate-800 text-white transition-all duration-300 flex flex-col`}>
-        {/* Top Section */}
-        <div className="p-4 border-b border-slate-700">
-          <div className="flex items-center justify-between">
-            {sidebarOpen && (
-              <h1 className="text-xl font-bold text-white">GST App</h1>
-            )}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-slate-700 rounded-lg"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="p-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder={sidebarOpen ? "Open Anything (Ctrl+F)" : ""}
-              className="w-full bg-slate-700 text-white placeholder-gray-400 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="absolute right-3 top-2.5">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Menu */}
-        <nav className="flex-1 px-4 space-y-2">
-          <NavItem icon="🏠" label="Home" href="/dashboard" active={true} sidebarOpen={sidebarOpen} />
-          <div 
-            className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
-            onClick={() => {
-              console.log('Parties clicked - navigating to /dashboard/parties')
-              router.push('/dashboard/parties')
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <span className="text-lg">👥</span>
-              {sidebarOpen && <span className="text-sm">Parties</span>}
-            </div>
-          </div>
-          <NavItem icon="📦" label="Items" href="/dashboard/items" sidebarOpen={sidebarOpen} hasAdd={true} />
-          <NavItem icon="🧾" label="Sale" href="/dashboard/sale" sidebarOpen={sidebarOpen} />
-          <NavItem icon="🛒" label="Purchase & Expense" href="/dashboard/purchase" sidebarOpen={sidebarOpen} />
-          <NavItem icon="📈" label="Grow Your Business" href="/dashboard/grow" sidebarOpen={sidebarOpen} />
-          <CashBankDropdown sidebarOpen={sidebarOpen} />
-          <NavItem icon="📊" label="Reports" href="/dashboard/reports" sidebarOpen={sidebarOpen} />
-          <NavItem icon="🔄" label="Sync, Share & Backup" href="/dashboard/sync" sidebarOpen={sidebarOpen} />
-          <NavItem icon="🔧" label="Utilities" href="/dashboard/utilities" sidebarOpen={sidebarOpen} />
-          <NavItem icon="⚙️" label="Settings" href="/dashboard/settings" sidebarOpen={sidebarOpen} />
-        </nav>
-
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-slate-700 space-y-3">
-          <NavItem icon="🔍" label="Plans & Pricing" sidebarOpen={sidebarOpen} />
-          
-          {/* Trial Info */}
-          <div className="bg-red-600 rounded-lg p-3">
-            <div className="text-sm font-medium">1 days Free Trial left</div>
-            <div className="w-full bg-red-800 rounded-full h-2 mt-2">
-              <div className="bg-white h-2 rounded-full" style={{width: '95%'}}></div>
-            </div>
-          </div>
-          
-          <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center">
-            Get GST App Premium →
-          </button>
-          
-          <NavItem icon="📱" label="Mobile" sidebarOpen={sidebarOpen} hasAdd={true} />
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <Header />
+      
+      <div className="flex">
+        {/* Left Sidebar */}
+        <Sidebar user={user} onLogout={handleLogout} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -177,12 +103,6 @@ export default function DashboardPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
-                  + Add Sale
-                </button>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
-                  + Add Purchase
-                </button>
                 <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -319,40 +239,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-// Navigation Item Component
-function NavItem({ icon, label, active = false, sidebarOpen, hasAdd = false, href }) {
-  const handleClick = () => {
-    console.log('NavItem clicked:', label, href)
-  }
-
-  const content = (
-    <div 
-      className={`flex items-center justify-between p-2 rounded-lg hover:bg-slate-700 cursor-pointer ${active ? 'bg-slate-700' : ''}`}
-      onClick={handleClick}
-    >
-      <div className="flex items-center space-x-3">
-        <span className="text-lg">{icon}</span>
-        {sidebarOpen && <span className="text-sm">{label}</span>}
       </div>
-      {hasAdd && sidebarOpen && (
-        <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
-      )}
     </div>
   )
-
-  if (href) {
-    return (
-      <Link href={href} className="block">
-        {content}
-      </Link>
-    )
-  }
-
-  return content
 }
 
 // Report Card Component
@@ -390,59 +279,6 @@ function DashboardMetric({ title, amount, period, trend }) {
         {getTrendIcon()}
       </div>
       <div className="text-xs text-gray-400 mt-1">{period}</div>
-    </div>
-  )
-}
-
-// Cash & Bank Dropdown Component
-function CashBankDropdown({ sidebarOpen }) {
-  const [isOpen, setIsOpen] = useState(false)
-
-  return (
-    <div className="space-y-1">
-      <div 
-        className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700 cursor-pointer"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center space-x-3">
-          <span className="text-lg">🏦</span>
-          {sidebarOpen && <span className="text-sm">Cash & Bank</span>}
-        </div>
-        {sidebarOpen && (
-          <svg 
-            className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        )}
-      </div>
-      
-      {isOpen && sidebarOpen && (
-        <div className="ml-6 space-y-1">
-          <Link href="/dashboard/cash-bank/bank-accounts" className="block">
-            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700 cursor-pointer">
-              <span className="text-sm">Bank Accounts</span>
-              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
-            </div>
-          </Link>
-          <Link href="/dashboard/cash-bank/cash-in-hand" className="block">
-            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700 cursor-pointer bg-slate-700 border-l-2 border-red-500">
-              <span className="text-sm">Cash In Hand</span>
-              <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
-            </div>
-          </Link>
-          <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700 cursor-pointer">
-            <span className="text-sm">Cheques</span>
-          </div>
-          <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700 cursor-pointer">
-            <span className="text-sm">Loan Accounts</span>
-            <span className="text-xs bg-blue-600 px-2 py-1 rounded">+</span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

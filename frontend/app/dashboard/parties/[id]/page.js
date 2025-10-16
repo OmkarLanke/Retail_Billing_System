@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { authService } from '../../../../lib/auth'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import Header from '../../../../components/Header'
 
 export default function PartyDetailsPage() {
   const [user, setUser] = useState(null)
@@ -128,9 +129,13 @@ export default function PartyDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Left Sidebar */}
-      <div className="w-64 bg-slate-800 text-white flex flex-col">
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <Header />
+      
+      <div className="flex">
+        {/* Left Sidebar */}
+        <div className="w-64 bg-slate-800 text-white flex flex-col">
         {/* Top Section */}
         <div className="p-4 border-b border-slate-700">
           <h1 className="text-xl font-bold text-white">GST App</h1>
@@ -276,9 +281,9 @@ export default function PartyDetailsPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900">{party.name}</span>
                     <span className={`text-sm font-medium ${
-                      party.balance > 0 ? 'text-red-600' : 'text-green-600'
+                      party.balanceType === 'TO_PAY' ? 'text-red-600' : 'text-green-600'
                     }`}>
-                      ₹ {party.balance?.toLocaleString() || '0.00'}
+                      ₹ {Math.abs(party.currentBalance || 0).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -308,12 +313,6 @@ export default function PartyDetailsPage() {
               </div>
               
               <div className="flex items-center space-x-2">
-                <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
-                  + Add Sale
-                </button>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
-                  + Add Purchase
-                </button>
                 <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -468,7 +467,9 @@ export default function PartyDetailsPage() {
                           {transaction.total > 0 ? `₹ ${transaction.total.toLocaleString()}` : ''}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {transaction.balance > 0 ? `₹ ${transaction.balance.toLocaleString()}` : ''}
+                          {transaction.type === 'SALE' 
+                            ? (transaction.saleBalance > 0 ? `₹ ${Math.abs(transaction.saleBalance).toLocaleString()}` : '')
+                            : (transaction.purchaseBalance > 0 ? `₹ ${Math.abs(transaction.purchaseBalance).toLocaleString()}` : (transaction.balance > 0 ? `₹ ${Math.abs(transaction.balance).toLocaleString()}` : ''))}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -495,6 +496,7 @@ export default function PartyDetailsPage() {
           }}
         />
       )}
+      </div>
     </div>
   )
 }

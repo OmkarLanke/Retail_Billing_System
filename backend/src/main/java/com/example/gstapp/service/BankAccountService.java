@@ -68,6 +68,7 @@ public class BankAccountService {
         
         BankAccount bankAccount = new BankAccount(
             merchantId,
+            request.getAccountDisplayName(),
             bankName,
             accountNumber,
             ifscCode,

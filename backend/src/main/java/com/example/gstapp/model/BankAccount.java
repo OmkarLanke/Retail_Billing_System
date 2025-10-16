@@ -14,6 +14,9 @@ public class BankAccount {
     @Column(name = "merchant_id", nullable = false)
     private Long merchantId;
 
+    @Column(name = "account_display_name")
+    private String accountDisplayName;
+
     @Column(name = "bank_name", nullable = false)
     private String bankName;
 
@@ -53,11 +56,12 @@ public class BankAccount {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public BankAccount(Long merchantId, String bankName, String accountNumber, String ifscCode, 
+    public BankAccount(Long merchantId, String accountDisplayName, String bankName, String accountNumber, String ifscCode, 
                       String accountHolderName, String branchName, String accountType, 
                       BigDecimal openingBalance) {
         this();
         this.merchantId = merchantId;
+        this.accountDisplayName = accountDisplayName;
         this.bankName = bankName;
         this.accountNumber = accountNumber;
         this.ifscCode = ifscCode;
@@ -83,6 +87,14 @@ public class BankAccount {
 
     public void setMerchantId(Long merchantId) {
         this.merchantId = merchantId;
+    }
+
+    public String getAccountDisplayName() {
+        return accountDisplayName;
+    }
+
+    public void setAccountDisplayName(String accountDisplayName) {
+        this.accountDisplayName = accountDisplayName;
     }
 
     public String getBankName() {
